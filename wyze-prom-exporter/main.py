@@ -6,7 +6,7 @@ from wyze_sdk import Client
 from apscheduler.schedulers.background import BackgroundScheduler
 from time import sleep
 
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 class WyzeHealthCollector(object):
     def __init__(self, wyze_client):
@@ -32,17 +32,17 @@ if __name__ == '__main__':
     client = Client(token=login_response['access_token'])
 
     # Setup metrics
-    #is_online = Gauge('is_online', 'Camera is Online', ['nickname', 'mac'])
     # Register custom collector
     whc = WyzeHealthCollector(client)
+    whc.update_devices()
     REGISTRY.register(whc)
 
     # Setup regular update job
     sched = BackgroundScheduler(daemon=True)
     sched.add_job(whc.update_devices,'interval', minutes=1)
-    sched.start()
 
-    whc.update_devices()
+    # Start prometheus_client's background http server
     start_http_server(8000)
+    sched.start()
     while True:
         sleep(1000)
